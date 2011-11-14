@@ -6,54 +6,98 @@
 
 var canvas = document.getElementById("visualization")
 var ctx = canvas.getContext("2d");
+
+var imageData;
+
 var max;
 
 var height;
 var width;
 
 var state = {};
-state.x = 1;
-state.y = 2;
-
-state.i = 2;
-state.j = 2;
-
-var timer;
-
-window.onresize = resize;
-
-resize(); // before doing any work, make sure the canvas is big enough
+state.z = 2;
 
 
-function resize() {
+var stats;
+
+init(); 
+
+
+function init() {
+	window.onresize = onresize;
+	stats = document.getElementById("stats");
+	onresize();
+
+
+	begin();
+}
+
+function onresize() {
 	height = window.innerHeight;
 	width = window.innerWidth;
-	height = 100;
-	width = 100;
+	
+	// hack to limit data set size
+	//height = 200;
+	//width = 500;
+
 	canvas.height = height;
 	canvas.width = width;
 
-	init();
+	// create new imagedata array
+	imageData = ctx.createImageData(width,height);
+
 }
 
-function init() {
-	// fill canvas with black?
+function begin() {
+
 	// calculate the number of primes (no use going past that number)
 	max = canvas.height * canvas.width;
+	console.log('starting: ', canvas.height, canvas.width, max);
 
-	console.log('init: ', canvas.height, canvas.width, max);
-	
+	/*
+	for (var i = 2; i < max; i++)
+	{
+		innerSieve(i);
+		//console.log(i);
+	}
 
-	// happens all at once
-	//while (iterativeSieve())	{ }
+	*/
+	innerSieve();
+}
 
-	setInterval(iterativeSieve);
+function innerSieve() {
+	var i = state.z;
+	for (var j = 2; j*i<=max; j++)
+	{
+		var index = j * i;
+
+		// increase opacity
+		imageData.data[(index*4)+3] += 90;
+		//imageData.data[(index*4)+3] = 255;
+
+		var r = imageData.data[(index*4)]
+		var g = imageData.data[(index*4)+1]
+		var b = imageData.data[(index*4)+2]
+		var a = imageData.data[(index*4)+3]
+
+	}
+
+	state.z++;
+	stats.innerHTML = i;
+	if (i % 10 == 0)
+	{
+		setTimeout(innerSieve,1);
+		ctx.putImageData(imageData,0,0);
+	}
+	else {
+		innerSieve();
+	}
+
 }
 
 function iterativeSieve()
 {
 	if (state.i > max) {
-		timer.stop();
 		return false;
 	}
 
