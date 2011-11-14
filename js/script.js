@@ -42,28 +42,19 @@ function init() {
 	max = canvas.height * canvas.width;
 
 	console.log('init: ', canvas.height, canvas.width, max);
-	//sieve();
-	//
-	//
-	setInterval(iterativeSieve,1);
-}
+	
 
-function iterativeSquare() {
-	state.x += 2;
-	state.y += 4;
+	// happens all at once
+	//while (iterativeSieve())	{ }
 
-	var x = state.x;
-	var y = state.y;
-
-	ctx.globalAlpha = 0.2;
-	ctx.fillRect(x,y,100+y ,100-x);
+	setInterval(iterativeSieve);
 }
 
 function iterativeSieve()
 {
 	if (state.i > max) {
 		timer.stop();
-		return;
+		return false;
 	}
 
 	if (state.i * state.j > max) {
@@ -74,11 +65,13 @@ function iterativeSieve()
 	drawPoint(state.i * state.j);
 	state.j+=1;
 
+	return true;
+
 }
 
 // http://en.wikipedia.org/wiki/Sieve_of_Eratosthenes
 function sieve() {
-	// 
+
 	if ( ( state.i <= max) && (state.j * state.i <= max) )
 	{
 		drawPoint(state.i * state.j);
@@ -100,8 +93,14 @@ function drawPoint(x)
 	var column = Math.floor(x % width);
 	ctx.globalAlpha = 0.2;
 	ctx.fillRect(column,row,1,1);
-	console.log(column,row);
-	
+}
+
+function addPoint(x)
+{
+	var row = Math.floor(x / width);
+	var column = Math.floor(x % width);
+	ctx.globalAlpha = 0.2;
+	ctx.fillRect(column,row,1,1);
 }
 
 
