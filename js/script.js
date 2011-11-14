@@ -1,150 +1,131 @@
 /* Author:
-
+	David Seelig
 */
 
-
-
-var canvas = document.getElementById("visualization")
+var canvas = document.getElementById("visualization");
 var ctx = canvas.getContext("2d");
 
-var imageData;
 
-var max;
-
-var height;
-var width;
+var imageData,
+	startbutton,
+	max,
+	height,
+	width,
+	stats,
+	running;
 
 var state = {};
-state.z = 2;
 
-
-var stats;
 
 init(); 
 
 
 function init() {
-	window.onresize = onresize;
 	stats = document.getElementById("stats");
+	startButton = document.getElementById("start");
+	maxLabel = document.getElementById("max");
+	running = false;
+
+	startButton.onclick = startStop;
+
+	// get the correct size
 	onresize();
 
+	window.onresize = onresize;
 
-	begin();
 }
 
+function startStop() {
+	console.log("start");
+	running = !running;
+	if (running) {
+		startButton.innerHTML = "stop";
+		begin();
+	}
+	else {
+		startButton.innerHTML = "start";
+	}
+}
 function onresize() {
 	height = window.innerHeight;
 	width = window.innerWidth;
-	
-	// hack to limit data set size
-	//height = 200;
-	//width = 500;
 
+	height = (Math.floor(height / 100) * 100);
+	width = (Math.floor(width / 100) * 100);
+
+	maxLabel.innerHTML = "Showing numbers 1 - " + height * width + " (" + height + "x" + width + ")";
+	
 	canvas.height = height;
 	canvas.width = width;
-
-	// create new imagedata array
-	imageData = ctx.createImageData(width,height);
 
 }
 
 function begin() {
+	// create new imagedata array
+	imageData = ctx.createImageData(width,height);
+	state.cur = 2;
 
 	// calculate the number of primes (no use going past that number)
 	max = canvas.height * canvas.width;
-	console.log('starting: ', canvas.height, canvas.width, max);
 
-	/*
-	for (var i = 2; i < max; i++)
-	{
-		innerSieve(i);
-		//console.log(i);
-	}
-
-	*/
 	innerSieve();
-}
-
-function innerSieve() {
-	var i = state.z;
-	for (var j = 2; j*i<=max; j++)
-	{
-		var index = j * i;
-
-		// increase opacity
-		imageData.data[(index*4)+3] += 90;
-		//imageData.data[(index*4)+3] = 255;
-
-		var r = imageData.data[(index*4)]
-		var g = imageData.data[(index*4)+1]
-		var b = imageData.data[(index*4)+2]
-		var a = imageData.data[(index*4)+3]
-
-	}
-
-	state.z++;
-	stats.innerHTML = i;
-	if (i % 10 == 0)
-	{
-		setTimeout(innerSieve,1);
-		ctx.putImageData(imageData,0,0);
-	}
-	else {
-		innerSieve();
-	}
-
-}
-
-function iterativeSieve()
-{
-	if (state.i > max) {
-		return false;
-	}
-
-	if (state.i * state.j > max) {
-		state.i++;
-		state.j = 2; // next factor
-	}
-
-	drawPoint(state.i * state.j);
-	state.j+=1;
-
-	return true;
 
 }
 
 // http://en.wikipedia.org/wiki/Sieve_of_Eratosthenes
-function sieve() {
+function innerSieve() {
+	var i = state.cur;
 
-	if ( ( state.i <= max) && (state.j * state.i <= max) )
+	var marked = false;
+
+	// break out if you're at the max
+	if (!running || i >= max) {
+		printPrimes();
+		return;
+	}
+
+	for (var j = 2; j*i<=max; j++)
 	{
-		drawPoint(state.i * state.j);
+		var index = j * i;
+		
+		// mark the number
+
+		imageData.data[(index*4)+3] = 255;
+		marked = true;
 
 	}
-	for (var i = 2; i<=max; i++)
+
+	// to get the next possible prime, go through the 
+	// array and find the next unmarked number
+	while (state.cur < max)
 	{
-		for (var j = 2; j*i<=max; j++)
-		{
-			drawPoint(j*i);
-		}
+		// look for the first unmarked number
+		state.cur++;
+		if (imageData.data[(state.cur*4)+3] == 0) 
+			break;
 	}
+
+	printStatus(i + "out of " + max);
+	setTimeout(innerSieve,1);
+	if (marked)
+		ctx.putImageData(imageData,0,0);
+
 }
 
+function printPrimes() {
+	var primes = new Array();
+	for(var i = 2; i<state.cur; i++)
+	{
+		if (imageData.data[(i*4)+3] == 0)
+			primes.push(i);
+	}
+	printStatus("Primes: " +  primes.join(","));
+}
 
-function drawPoint(x)
+function printStatus(msg)
 {
-	var row = Math.floor(x / width);
-	var column = Math.floor(x % width);
-	ctx.globalAlpha = 0.2;
-	ctx.fillRect(column,row,1,1);
+	stats.innerHTML = msg;
 }
 
-function addPoint(x)
-{
-	var row = Math.floor(x / width);
-	var column = Math.floor(x % width);
-	ctx.globalAlpha = 0.2;
-	ctx.fillRect(column,row,1,1);
-}
 
 
